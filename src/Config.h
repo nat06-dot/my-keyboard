@@ -1,8 +1,3 @@
-/**
- * @file Config.h
- * @brief Global configuration constants for the USB-to-BLE Bridge.
- */
-
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -17,22 +12,18 @@
 #define DEVICE_NAME_2 "USB-BLE Dev 2"
 #define DEVICE_NAME_3 "USB-BLE Dev 3"
 
-/** @brief Manufacturer name reported over BLE */
 #define DEVICE_MANUFACTURER "ESP32-S3"
-
-/** @brief Battery level reported over BLE (0-100) */
 #define BATTERY_LEVEL 100
-
-/** @brief Number of available device slots (maximum 3 recommended) */
 #define NUM_DEVICE_SLOTS 3
-
-/** @brief Key combo for device switching: Scroll Lock + number key */
 #define ENABLE_DEVICE_SWITCHING true
-
-/**
- * @brief LED feedback pin (blinks to show current slot)
- * Set to -1 to disable, or use your board's built-in LED pin
- */
 #define LED_FEEDBACK_PIN 2
+
+// 🟢 [เพิ่มตรงนี้]: ขาสำหรับควบคุมไฟ RGB (WS2812) บนบอร์ด ESP32-S3
+// (ถ้าเป็นบอร์ด DevKit ทั่วไปมักจะเป็นพิน 48 หรือใช้ RGB_BUILTIN ของระบบ)
+#ifdef RGB_BUILTIN
+#define RGB_LED_PIN RGB_BUILTIN
+#else
+#define RGB_LED_PIN 48
+#endif
 
 #endif // CONFIG_H

@@ -42,14 +42,14 @@ void BLEManager::begin(uint8_t slot, const char *deviceName)
   Serial.printf("[BLE] Advertising as '%s'\n", deviceName);
 }
 
+// 🟢 [แก้ไขจุดนี้]: เปลี่ยนวิธีเช็กการเชื่อมต่อบลูทูธให้เสถียรและตรงไปตรงมาขึ้น
 bool BLEManager::isConnected()
 {
-  NimBLEServer *pServer = NimBLEDevice::getServer();
-  if (pServer == nullptr)
+  if (_bleCombo == nullptr)
   {
     return false;
   }
-  return pServer->getConnectedCount() > 0;
+  return _bleCombo->isConnected();
 }
 
 void BLEManager::sendKeyboardReport(const uint8_t *keys, uint8_t modifiers)
