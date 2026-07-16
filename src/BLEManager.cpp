@@ -13,6 +13,7 @@ class MySecurityCallbacks : public NimBLESecurityCallbacks
     if (desc->sec_state.bonded)
     {
       Serial.println("[BLE] Bonding Complete! Automatically saving NVS...");
+      // 🟢 บันทึกข้อมูลคีย์บลูทูธลงในสล็อตทันทีที่จับคู่สำเร็จ
       NVSUtils::saveSlotBonds(_activeSlot);
     }
   }
@@ -71,6 +72,7 @@ void BLEManager::setUniqueMac(uint8_t slot)
   uint8_t mac[6];
   esp_read_mac(mac, ESP_MAC_WIFI_STA);
 
+  // สลับ MAC Address ตามสล็อตเพื่อให้อุปกรณ์จำแนกความต่างได้
   mac[5] = (mac[5] & 0xF0) | (slot & 0x0F);
 
   esp_err_t err = esp_base_mac_addr_set(mac);

@@ -17,10 +17,13 @@ static const char *hid_proto_name_str[] = {"NONE", "KEYBOARD", "MOUSE"};
 
 void USBManager::begin()
 {
+<<<<<<< HEAD
   // 🟢 [แก้ไขจุดที่ 1]: สร้าง Queue รอไว้ก่อนเป็นอันดับแรกสุด ป้องกันการเข้าถึง Queue ที่เป็น NULL
   hid_host_event_queue = xQueueCreate(10, sizeof(hid_host_event_queue_t));
   assert(hid_host_event_queue != NULL);
 
+=======
+>>>>>>> 1f84a68 (update_debug)
   Serial.println("[USB] Installing USB Host library...");
   BaseType_t task_created =
       xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 4096,
@@ -86,11 +89,14 @@ void USBManager::hid_host_device_callback(
     hid_host_device_handle_t hid_device_handle,
     const hid_host_driver_event_t event, void *arg)
 {
+<<<<<<< HEAD
 
   // 🟢 [แก้ไขจุดที่ 3]: เพิ่ม Null Check ป้องกันการแครชหาก Queue ยังไม่ถูกสร้างขึ้นมา
   if (hid_host_event_queue == NULL)
     return;
 
+=======
+>>>>>>> 1f84a68 (update_debug)
   const hid_host_event_queue_t evt_queue = {
       .hid_device_handle = hid_device_handle, .event = event, .arg = arg};
   xQueueSend(hid_host_event_queue, &evt_queue, 0);
@@ -121,6 +127,10 @@ void USBManager::hid_host_device_event(
     Serial.printf("[USB] %s connected!\n",
                   hid_proto_name_str[dev_params.proto]);
 
+<<<<<<< HEAD
+=======
+    // Skip NONE protocol devices to save hardware channels (max 8 on ESP32-S3)
+>>>>>>> 1f84a68 (update_debug)
     if (dev_params.proto == HID_PROTOCOL_NONE)
     {
       Serial.println("[USB] Skipping NONE protocol device to save channels");

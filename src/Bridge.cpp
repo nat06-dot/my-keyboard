@@ -1,4 +1,5 @@
 #include "Bridge.h"
+#include "Config.h" // 🟢 เรียกใช้ Config เพื่อดึงพินไฟ RGB
 #include "NVSUtils.h"
 #include <hid_usage_keyboard.h>
 #include <WiFi.h>
@@ -7,6 +8,7 @@ uint8_t Bridge::_currentSlot = 0;
 BLEManager Bridge::_bleManager;
 Preferences Bridge::_preferences;
 
+<<<<<<< HEAD
 // FreeRTOS Handlers
 QueueHandle_t Bridge::_reportQueue = NULL;
 TaskHandle_t Bridge::_bleTxTaskHandle = NULL;
@@ -16,6 +18,20 @@ void Bridge::begin()
   // 0. Disable WiFi immediately to isolate RF transceiver for BLE only (Zero RF Interference)
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
+=======
+// 🟢 ฟังก์ชันสำหรับสั่งงานไฟ RGB WS2812 บนบอร์ดโดยตรง
+static void setStatusRGB(uint8_t r, uint8_t g, uint8_t b)
+{
+#if defined(RGB_LED_PIN) && RGB_LED_PIN >= 0
+  neopixelWrite(RGB_LED_PIN, r, g, b);
+#endif
+}
+
+void Bridge::begin()
+{
+  // 🟢 เริ่มต้นระบบ: แสดงไฟสีแดงค้างไว้ (กำลังเตรียมระบบ/รอเชื่อมบลูทูธ)
+  setStatusRGB(64, 0, 0);
+>>>>>>> 1f84a68 (update_debug)
 
   // 1. Load saved slot
   _preferences.begin("usb-ble", true);
@@ -65,14 +81,37 @@ void Bridge::loop()
   static bool wasConnected = false;
   bool connected = _bleManager.isConnected();
 
+  // 🟢 แสดงสถานะสีไฟตามการเชื่อมต่อจริงของบลูทูธ
+  if (connected)
+  {
+    setStatusRGB(0, 0, 64); // 🔵 สีน้ำเงินค้าง = บลูทูธเชื่อมต่อคอมสำเร็จแล้ว!
+  }
+  else
+  {
+    setStatusRGB(64, 0, 0); // 🔴 สีแดงค้าง = กำลังรอการเชื่อมต่อบลูทูธ
+  }
+
   if (wasConnected && !connected)
   {
+<<<<<<< HEAD
+=======
+    Serial.println("[BLE] Client disconnected - syncing bonds to flash (Safe from CCCD loss)...");
+>>>>>>> 1f84a68 (update_debug)
     NVSUtils::saveSlotBonds(_currentSlot);
   }
   wasConnected = connected;
 
+<<<<<<< HEAD
   // Let FreeRTOS idle task breathe
   delay(10);
+=======
+  if (millis() - lastStatus > 5000)
+  {
+    lastStatus = millis();
+    Serial.printf("[Status] Slot %d | BLE: %s\n", _currentSlot + 1,
+                  connected ? "CONNECTED" : "waiting for pairing...");
+  }
+>>>>>>> 1f84a68 (update_debug)
 }
 
 void Bridge::switchToSlot(uint8_t slot)
@@ -119,32 +158,73 @@ void Bridge::switchToSlot(uint8_t slot)
 
 void Bridge::onKeyboardReport(const uint8_t *data, size_t length)
 {
-  if (length < sizeof(hid_keyboard_input_report_boot_t))
+  // 🟢 เมื่อคีย์บอร์ดส่งข้อมูลมาถึงบอร์ดสำเร็จ ให้สลับเป็นสีเขียวสว่างวาบทันที!
+  setStatusRGB(0, 64, 0);
+
+  // 🟢 [แก้ไขบั๊กข้อมูลเลื่อน]: ตรวจสอบคีย์บอร์ดที่ส่งรายงานแบบมี Report ID (ความยาวข้อมูล 9 ไบต์)
+  const uint8_t *report_data = data;
+  size_t report_length = length;
+
+  if (length > 8 && (data[0] == 0x01 || data[0] == 0x02))
+  {
+    report_data = data + 1;
+    report_length = length - 1;
+  }
+
+  if (report_length < sizeof(hid_keyboard_input_report_boot_t))
+  {
+    // ก่อนสิ้นสุดการทำงาน ย้อนสถานะสีไฟกลับไปเป็นแบบเดิม
+    if (_bleManager.isConnected())
+      setStatusRGB(0, 0, 64);
+    else
+      setStatusRGB(64, 0, 0);
     return;
+  }
 
   hid_keyboard_input_report_boot_t *kb_report =
-      (hid_keyboard_input_report_boot_t *)data;
+      (hid_keyboard_input_report_boot_t *)report_data;
 
   // Check for device switching combo
   if (checkDeviceSwitchCombo(kb_report->key, kb_report->modifier.val))
   {
+    if (_bleManager.isConnected())
+      setStatusRGB(0, 0, 64);
+    else
+      setStatusRGB(64, 0, 0);
     return;
   }
 
+<<<<<<< HEAD
   // ⚡ Step 1: Process SOCD (Last Win) on Core 1 (Blazing fast, ~1-2 microseconds!)
   applySOCD(kb_report->key);
+=======
+  // ⚡ ประมวลผลปุ่มทิศทางแบบ SOCD Last Win ก่อนส่งข้อมูลออกไป
+  // applySOCD(kb_report->key);
+>>>>>>> 1f84a68 (update_debug)
 
   // ⚡ Step 2: Pack the processed state into a Queue structure
   KeyboardReport report;
   report.modifier = kb_report->modifier.val;
   memcpy(report.keys, kb_report->key, 6);
 
+<<<<<<< HEAD
   // ⚡ Step 3: Push to FreeRTOS Queue (Non-blocking! Completes in ~1 microsecond)
   // This frees up the USB stack immediately to poll the keyboard at 1000Hz (no wait for BLE)
   if (_reportQueue != NULL)
   {
     xQueueSend(_reportQueue, &report, 0);
   }
+=======
+  // Forward to BLE
+  _bleManager.sendKeyboardReport(kb_report->key, kb_report->modifier.val);
+
+  // หน่วงเวลาสั้นๆ (20ms) ให้ลูกตามองเห็นดวงไฟสีเขียวกระพริบทัน จากนั้นดึงสีไฟสถานะเดิมกลับมา
+  delay(20);
+  if (_bleManager.isConnected())
+    setStatusRGB(0, 0, 64);
+  else
+    setStatusRGB(64, 0, 0);
+>>>>>>> 1f84a68 (update_debug)
 }
 
 bool Bridge::checkDeviceSwitchCombo(const uint8_t *keys, uint8_t modifiers)
@@ -174,13 +254,22 @@ bool Bridge::checkDeviceSwitchCombo(const uint8_t *keys, uint8_t modifiers)
 
 void Bridge::applySOCD(uint8_t *keys)
 {
+<<<<<<< HEAD
+=======
+  // โค้ดส่วน applySOCD คงเดิมไว้ตามโครงสร้างเดิมของพี่ได้เลยครับ...
+>>>>>>> 1f84a68 (update_debug)
   static bool prevLeft = false;
   static bool prevRight = false;
   static bool prevUp = false;
   static bool prevDown = false;
 
+<<<<<<< HEAD
   static uint8_t lastHorizontalWinner = 0; // 1 = Left, 2 = Right
   static uint8_t lastVerticalWinner = 0;   // 1 = Up, 2 = Down
+=======
+  static uint8_t lastHorizontalWinner = 0;
+  static uint8_t lastVerticalWinner = 0;
+>>>>>>> 1f84a68 (update_debug)
 
   int leftIdx = -1, rightIdx = -1;
   int upIdx = -1, downIdx = -1;
@@ -188,6 +277,7 @@ void Bridge::applySOCD(uint8_t *keys)
   for (int i = 0; i < 6; i++)
   {
     if (keys[i] == HID_KEY_A || keys[i] == HID_KEY_LEFT)
+<<<<<<< HEAD
     {
       leftIdx = i;
     }
@@ -203,6 +293,15 @@ void Bridge::applySOCD(uint8_t *keys)
     {
       downIdx = i;
     }
+=======
+      leftIdx = i;
+    if (keys[i] == HID_KEY_D || keys[i] == HID_KEY_RIGHT)
+      rightIdx = i;
+    if (keys[i] == HID_KEY_W || keys[i] == HID_KEY_UP)
+      upIdx = i;
+    if (keys[i] == HID_KEY_S || keys[i] == HID_KEY_DOWN)
+      downIdx = i;
+>>>>>>> 1f84a68 (update_debug)
   }
 
   bool currLeft = (leftIdx != -1);

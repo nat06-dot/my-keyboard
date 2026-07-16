@@ -58,11 +58,15 @@ private:
   /** @brief Checks if the current keyboard input matches the device switch combo. */
   static bool checkDeviceSwitchCombo(const uint8_t *keys, uint8_t modifiers);
 
+<<<<<<< HEAD
   /** @brief Resolves simultaneous opposing direction inputs with Last Input Priority. */
   static void applySOCD(uint8_t *keys);
 
   /** @brief Dedicated FreeRTOS task running on Core 0 to transmit BLE reports. */
   static void bleTxTask(void *pvParameters);
+=======
+  static void applySOCD(uint8_t *keys);
+>>>>>>> 1f84a68 (update_debug)
 };
 
 #endif // BRIDGE_H

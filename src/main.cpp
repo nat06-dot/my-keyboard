@@ -4,11 +4,12 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include <WiFi.h>
+#include <nvs_flash.h>
 
 void setup()
 {
   Serial.begin(115200);
-
+  // delay(1000);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Serial.println("╔════════════════════════════════════════════════╗");
