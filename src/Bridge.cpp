@@ -21,6 +21,9 @@ void Bridge::begin()
 {
   setStatusRGB(64, 0, 0);
 
+  USBManager::setKeyboardCallback(onKeyboardReport);
+  USBManager::begin();
+
   _preferences.begin("usb-ble", true);
   _currentSlot = _preferences.getUChar("slot", 0);
   if (_currentSlot >= NUM_DEVICE_SLOTS)
@@ -34,9 +37,6 @@ void Bridge::begin()
   const char *deviceNames[NUM_DEVICE_SLOTS] = {DEVICE_NAME_1, DEVICE_NAME_2,
                                                DEVICE_NAME_3};
   _bleManager.begin(_currentSlot, deviceNames[_currentSlot]);
-
-  USBManager::setKeyboardCallback(onKeyboardReport);
-  USBManager::begin();
 }
 
 void Bridge::loop()
@@ -45,6 +45,15 @@ void Bridge::loop()
   static bool wasConnected = false;
 
   bool connected = _bleManager.isConnected();
+
+  // The BLE security callback (NimBLE host task) only sets a flag when a
+  // bond completes; the actual (slow, blocking) flash write happens here,
+  // on the main loop, so it never stalls the BLE stack.
+  if (_bleManager.consumePendingBondSave())
+  {
+    Serial.println("[BLE] Bonding complete - saving bonds to flash...");
+    NVSUtils::saveSlotBonds(_currentSlot);
+  }
 
   if (isFlashingGreen)
   {
@@ -116,16 +125,16 @@ void Bridge::switchToSlot(uint8_t slot)
     for (int i = 0; i <= slot; i++)
     {
       digitalWrite(LED_FEEDBACK_PIN, HIGH);
-      delay(150);
+      delay(50);
       digitalWrite(LED_FEEDBACK_PIN, LOW);
-      delay(150);
+      delay(50);
     }
   }
 
   usb_host_device_free_all();
 
   Serial.println("[System] Restarting to apply new slot settings...");
-  delay(500);
+  delay(100);
   ESP.restart();
 }
 
@@ -158,10 +167,10 @@ void Bridge::onKeyboardReport(const uint8_t *data, size_t length)
   // 🟢 เอาคอมเมนต์ออกแล้ว! เรียกใช้ระบบประมวลผล SOCD Last Win ทันที
   applySOCD(kb_report->key);
 
-  Serial.printf("[KB] mod:0x%02X keys:[%02X %02X %02X %02X %02X %02X]\n",
-                kb_report->modifier.val, kb_report->key[0], kb_report->key[1],
-                kb_report->key[2], kb_report->key[3], kb_report->key[4],
-                kb_report->key[5]);
+  // Serial.printf("[KB] mod:0x%02X keys:[%02X %02X %02X %02X %02X %02X]\n",
+  //               kb_report->modifier.val, kb_report->key[0], kb_report->key[1],
+  //               kb_report->key[2], kb_report->key[3], kb_report->key[4],
+  //               kb_report->key[5]);
 
   _bleManager.sendKeyboardReport(kb_report->key, kb_report->modifier.val);
 }
@@ -176,7 +185,7 @@ bool Bridge::checkDeviceSwitchCombo(const uint8_t *keys, uint8_t modifiers)
 
   for (int i = 0; i < 6; i++)
   {
-    if (keys[i] >= HID_KEY_1 && keys[i] <= HID_KEY_3)
+    if (keys[i] >= HID_KEY_1 && keys[i] <= (HID_KEY_1 + NUM_DEVICE_SLOTS - 1))
     {
       numberKey = keys[i] - HID_KEY_1 + 1;
     }

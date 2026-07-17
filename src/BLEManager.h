@@ -34,6 +34,16 @@ public:
    */
   void sendKeyboardReport(const uint8_t *keys, uint8_t modifiers);
 
+  /**
+   * @brief Checks whether the BLE security callback (running on the NimBLE
+   * host task) has requested that bonds be flushed to flash, and clears
+   * the request. Flash writes are slow/blocking, so the actual
+   * NVSUtils::saveSlotBonds() call must happen from the main loop, never
+   * from inside a BLE callback.
+   * @return true if a bond save is now pending and should be performed.
+   */
+  static bool consumePendingBondSave();
+
 private:
   BleCombo *_bleCombo;
 

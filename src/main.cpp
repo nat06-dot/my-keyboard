@@ -8,6 +8,7 @@
 
 void setup()
 {
+  setCpuFrequencyMhz(240);
   Serial.begin(115200);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
@@ -27,9 +28,9 @@ void setup()
 
   Serial.printf("[DEBUG] NimBLEDevice::getNumBonds() = %d\n",
                 NimBLEDevice::getNumBonds());
-  delay(2000);
-  NVSUtils::debugListAllEntries();
-  
+
+  // NVSUtils::debugListAllEntries();
+
   // 🟢 [แก้ไขจุดที่ 3]: เอาบรรทัดล้างความจำ (deleteAllBonds) ออก เพื่อไม่ให้มันลบข้อมูลจับคู่ทุกครั้งที่รีสตาร์ท!
 
   Serial.println();
@@ -43,4 +44,4 @@ void loop()
 {
   Bridge::loop();
   delay(1);
-}  
+}

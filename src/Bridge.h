@@ -1,3 +1,9 @@
+/**
+ * @file Bridge.h
+ * @brief The application logic that bridges USB HID keyboard inputs to BLE HID outputs.
+ * Uses FreeRTOS Queues and Dual-Core execution to achieve near-zero input lag.
+ */
+
 #ifndef BRIDGE_H
 #define BRIDGE_H
 
@@ -6,12 +12,23 @@
 #include "USBManager.h"
 #include <Arduino.h>
 #include <Preferences.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/task.h>
+
+// Struct to store keyboard report packets in the queue
+struct KeyboardReport
+{
+  uint8_t modifier;
+  uint8_t keys[6];
+};
 
 class Bridge
 {
 public:
   /**
-   * @brief Initializes the application.
+   * @brief Initializes the application: disables WiFi, loads preferences,
+   * starts the FreeRTOS Queue, spawns the BLE Task on Core 0, and starts USB Host.
    */
   static void begin();
 
@@ -31,7 +48,11 @@ private:
   static BLEManager _bleManager;
   static Preferences _preferences;
 
-  /** @brief Callback for processing USB keyboard reports. */
+  // FreeRTOS Core Synchronization
+  static QueueHandle_t _reportQueue;
+  static TaskHandle_t _bleTxTaskHandle;
+
+  /** @brief Callback for processing USB keyboard reports. Runs on Core 1. */
   static void onKeyboardReport(const uint8_t *data, size_t length);
 
   /** @brief Checks if the current keyboard input matches the device switch combo. */

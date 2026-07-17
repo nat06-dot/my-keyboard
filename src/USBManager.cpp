@@ -28,7 +28,7 @@ void USBManager::begin()
   Serial.println("[USB] Installing USB Host library...");
   BaseType_t task_created =
       xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 4096,
-                              xTaskGetCurrentTaskHandle(), 2, NULL, 0);
+                              xTaskGetCurrentTaskHandle(), 20, NULL, 0);
   assert(task_created == pdTRUE);
 
   ulTaskNotifyTake(false, 1000);
@@ -37,14 +37,14 @@ void USBManager::begin()
   Serial.println("[USB] Installing HID driver...");
   const hid_host_driver_config_t hid_host_driver_config = {
       .create_background_task = true,
-      .task_priority = 5,
+      .task_priority = 21,
       .stack_size = 4096,
       .core_id = 0,
       .callback = hid_host_device_callback,
       .callback_arg = NULL};
   ESP_ERROR_CHECK(hid_host_install(&hid_host_driver_config));
 
-  task_created = xTaskCreate(&hid_host_task, "hid_task", 4096, NULL, 2, NULL);
+  task_created = xTaskCreate(&hid_host_task, "hid_task", 4096, NULL, 19, NULL);
   assert(task_created == pdTRUE);
   Serial.println("[USB] HID driver ready");
 }
