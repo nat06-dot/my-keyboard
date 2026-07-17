@@ -13,8 +13,15 @@ class MySecurityCallbacks : public NimBLESecurityCallbacks
     if (desc->sec_state.bonded)
     {
       Serial.println("[BLE] Bonding Complete! Automatically saving NVS...");
-      // 🟢 บันทึกข้อมูลคีย์บลูทูธลงในสล็อตทันทีที่จับคู่สำเร็จ
       NVSUtils::saveSlotBonds(_activeSlot);
+
+      // 🚀 [BOOST SPEED]: บังคับให้ Host (PC/มือถือ) คุยกับบอร์ดด้วยความถี่สูงสุด!
+      // พารามิเตอร์: min_interval=6 (7.5ms), max_interval=9 (11.25ms), latency=0, timeout=400 (4s)
+      if (NimBLEDevice::getServer() != nullptr)
+      {
+        NimBLEDevice::getServer()->updateConnParams(desc->conn_handle, 6, 9, 0, 400);
+        Serial.println("[BLE] ⚡ Ultra-Low Latency Mode Enabled (7.5ms)!");
+      }
     }
   }
   uint32_t onPassKeyRequest() override { return 123456; }
@@ -43,7 +50,6 @@ void BLEManager::begin(uint8_t slot, const char *deviceName)
   Serial.printf("[BLE] Advertising as '%s'\n", deviceName);
 }
 
-// 🟢 [แก้ไขจุดนี้]: เปลี่ยนวิธีเช็กการเชื่อมต่อบลูทูธให้เสถียรและตรงไปตรงมาขึ้น
 bool BLEManager::isConnected()
 {
   if (_bleCombo == nullptr)
@@ -72,7 +78,6 @@ void BLEManager::setUniqueMac(uint8_t slot)
   uint8_t mac[6];
   esp_read_mac(mac, ESP_MAC_WIFI_STA);
 
-  // สลับ MAC Address ตามสล็อตเพื่อให้อุปกรณ์จำแนกความต่างได้
   mac[5] = (mac[5] & 0xF0) | (slot & 0x0F);
 
   esp_err_t err = esp_base_mac_addr_set(mac);

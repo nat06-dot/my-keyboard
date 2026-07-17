@@ -9,7 +9,6 @@
 void setup()
 {
   Serial.begin(115200);
-  // delay(1000);
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Serial.println("╔════════════════════════════════════════════════╗");
@@ -24,16 +23,14 @@ void setup()
     digitalWrite(LED_FEEDBACK_PIN, LOW);
   }
 
-  // DEBUG: ดูว่ามี namespace/key อะไรอยู่ใน nvs partition บ้างก่อน bridge เริ่ม
-  // NVSUtils::debugListAllEntries();
-
   Bridge::begin();
 
   Serial.printf("[DEBUG] NimBLEDevice::getNumBonds() = %d\n",
                 NimBLEDevice::getNumBonds());
-
-  // NimBLEDevice::deleteAllBonds();
-  // Serial.println("Cleared all BLE bonds");
+  delay(2000);
+  NVSUtils::debugListAllEntries();
+  
+  // 🟢 [แก้ไขจุดที่ 3]: เอาบรรทัดล้างความจำ (deleteAllBonds) ออก เพื่อไม่ให้มันลบข้อมูลจับคู่ทุกครั้งที่รีสตาร์ท!
 
   Serial.println();
   Serial.println("╔════════════════════════════════════════════════╗");
@@ -45,5 +42,5 @@ void setup()
 void loop()
 {
   Bridge::loop();
-  delay(10);
-}
+  delay(1);
+}  

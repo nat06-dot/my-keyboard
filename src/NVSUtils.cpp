@@ -211,7 +211,7 @@ void NVSUtils::loadSlotBonds(uint8_t slot)
   snprintf(slot_ns, sizeof(slot_ns), "ble_bond_%d", slot);
   Serial.printf("[System] Loading BLE bonds for slot %d from '%s'...\n",
                 slot + 1, slot_ns);
-  copyNamespace(slot_ns, "nimble_bond");
+  copyNamespace(slot_ns, "nimble_bonds");
 }
 
 void NVSUtils::saveSlotBonds(uint8_t slot)
@@ -220,7 +220,7 @@ void NVSUtils::saveSlotBonds(uint8_t slot)
   snprintf(slot_ns, sizeof(slot_ns), "ble_bond_%d", slot);
   Serial.printf("[System] Saving BLE bonds for slot %d to '%s'...\n", slot + 1,
                 slot_ns);
-  copyNamespace("nimble_bond", slot_ns);
+  copyNamespace("nimble_bonds", slot_ns);
 }
 
 void NVSUtils::debugListAllEntries()

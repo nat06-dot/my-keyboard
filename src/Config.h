@@ -8,7 +8,7 @@
 // ============================================================================
 
 /** @brief Device names for each slot (will show up in Bluetooth settings) */
-#define DEVICE_NAME_1 "USB-BLE Dev 1"
+#define DEVICE_NAME_1 "TK68 PRO Modify"
 #define DEVICE_NAME_2 "USB-BLE Dev 2"
 #define DEVICE_NAME_3 "USB-BLE Dev 3"
 
@@ -18,20 +18,11 @@
 #define ENABLE_DEVICE_SWITCHING true
 #define LED_FEEDBACK_PIN 2
 
-<<<<<<< HEAD
-// 🟢 [เพิ่มตรงนี้]: ขาสำหรับควบคุมไฟ RGB (WS2812) บนบอร์ด ESP32-S3
-// (ถ้าเป็นบอร์ด DevKit ทั่วไปมักจะเป็นพิน 48 หรือใช้ RGB_BUILTIN ของระบบ)
-#ifdef RGB_BUILTIN
-#define RGB_LED_PIN RGB_BUILTIN
-#else
-#define RGB_LED_PIN 48
-=======
 // 🟢 [เพิ่มเพิ่มสำหรับไฟ RGB บนบอร์ด ESP32-S3]
 #ifdef RGB_BUILTIN
 #define RGB_LED_PIN RGB_BUILTIN
 #else
 #define RGB_LED_PIN 48 // GPIO 48 เป็นขามาตรฐานของไฟ RGB (WS2812) บน ESP32-S3 DevKitC แทบทุกรุ่น
->>>>>>> 1f84a68 (update_debug)
 #endif
 
 #endif // CONFIG_H
